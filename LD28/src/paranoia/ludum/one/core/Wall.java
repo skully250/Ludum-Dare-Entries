@@ -20,7 +20,7 @@ public class Wall {
     public Node guiNode;
     public Picture sprite;
 
-    private String imageLocation;
+    public String imageLocation;
     
     public Wall(int x, int y, String imageLocation, SimpleApplication app) {
         this.sprite = new Picture("Wall");

@@ -10,6 +10,7 @@ import com.jme3.scene.Node;
 import com.jme3.system.AppSettings;
 import com.jme3.ui.Picture;
 import java.util.ArrayList;
+import java.util.Random;
 import paranoia.ludum.two.lib.Sprite;
 import paranoia.ludum.two.lib.SpriteEngine;
 import paranoia.ludum.two.lib.SpriteLibrary;
@@ -28,13 +29,21 @@ public class ApplicationMain extends SimpleApplication {
     public Sprite[] npcs = new Sprite[10];
     
     public boolean renderTextBox = false;
+    public boolean loading = true;
     
     //Position of the player
     public int x, y;
+    public int npx = 208, npy = 208;
+    
+    public static final int GRID_SIZE = 16;
+    
+    Random rand = new Random();
     
     //Pictures for extra things
     public Picture textBox, background, lScreen;
     public Picture[] imageSprites = new Picture[10];
+    
+    public World level;
     
     public BitmapText text, hudText;
     
@@ -67,11 +76,13 @@ public class ApplicationMain extends SimpleApplication {
                 true, true, 1, 1, 0.0f, "End", "Start");
         npcs[0] = new Sprite("Textures/Entities/Female.png", "Female", assetManager,
                 true, true, 1, 1, 0.0f, "End", "Start");
-        npcs[0].moveAbsolute(208, 208);
+        npcs[0].moveAbsolute(npx, npy);
         imageSprites[0] = new Picture();
         imageSprites[0].setImage(assetManager, "Textures/Terrain/dirt.jpg", false);
-        World level = new World(this, settings);
+        level = new World(this, settings);
+        level.addItems();
         level.generateLevel();
+        level.renderItems();
         SpriteLibrary.l_guiNode = guiNode;
         SpriteLibrary library = new SpriteLibrary("Library1", false);
         ArrayList<Sprite> sprites = new ArrayList<Sprite>();
@@ -119,15 +130,19 @@ public class ApplicationMain extends SimpleApplication {
         
         public void onAction(String name, boolean isPressed, float tpf) {
             if (name.equals("Right")) {
+                if (level.canMove(x + 8, y))
                 x += 8;
             }
             else if (name.equals("Left")) {
+                if (level.canMove(x - 8, y))
                 x -= 8;
             }
             else if (name.equals("Up")) {
+                if (level.canMove(x, y + 8))
                 y += 8;
             }
             else if (name.equals("Down")) {
+                if (level.canMove(x, y - 8))
                 y -= 8;
             }
         }
@@ -153,12 +168,12 @@ public class ApplicationMain extends SimpleApplication {
     }
     
     public void renderLoadScreen() {
-            lScreen = new Picture("Loading Screen");
-            lScreen.setImage(assetManager, "Textures/Extras/Screens/loadingscreen.png", false);
-            lScreen.setWidth(768);
-            lScreen.setHeight(600);
-            lScreen.setLocalTranslation(-80, -80, 4);
-            guiNode.attachChild(lScreen);
+        lScreen = new Picture("Loading Screen");
+        lScreen.setImage(assetManager, "Textures/Menu/loadingscreen.png", false);
+        lScreen.setWidth(768);
+        lScreen.setHeight(600);
+        lScreen.setLocalTranslation(-80, -80, 4);
+        guiNode.attachChild(lScreen);
     }
     
     public void clearLoadingScreen() {
@@ -183,9 +198,48 @@ public class ApplicationMain extends SimpleApplication {
         timer += tpf;
         if (timer > loadTime) {
             clearLoadingScreen();
+            loading = false;
         }
-        player.moveAbsolute(x, y);
-        this.guiViewPort.setClearColor(true);
-        this.guiViewPort.setBackgroundColor(ColorRGBA.White);
+        if (!loading) {
+            if (timer > loadTime) {
+                int nnpx = rand.nextInt(2);
+                switch(nnpx) {
+                    case 1 :
+                        if (level.canMove(npx + 16, npy))
+                        npx += 16;
+                        break;
+                    case 2 :
+                        if (level.canMove(npx - 16, npy))
+                        npx -= 16;
+                        break;
+                }
+                int nnpy = rand.nextInt(2);
+                switch(nnpy) {
+                    case 1 :
+                        if (level.canMove(npx, npy + 16))
+                        npy += 16;
+                        break;
+                    case 2 :
+                        if (level.canMove(npx, npy - 16))
+                        npy -= 16;
+                        break;
+                }
+                timer = 0;
+            }
+            if (x < 0 || npx < 0) {
+                x = settings.getWidth();
+            } else if (x > settings.getWidth()) {
+                x = 0;
+            }
+            if (y < 0 || npy < 0) {
+                y = settings.getHeight();
+            } else if (y > settings.getHeight()) {
+                y = 0;
+            }
+            player.moveAbsolute(x, y);
+            npcs[0].moveAbsolute(npx, npy);
+            this.guiViewPort.setClearColor(true);
+            this.guiViewPort.setBackgroundColor(ColorRGBA.White);
+        }
     }
 }
