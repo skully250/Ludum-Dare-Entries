@@ -1,5 +1,6 @@
-package paranoia.ludum.one.lib;
+package paranoia.ludum.two.lib;
 
+import paranoia.ludum.one.lib.*;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;

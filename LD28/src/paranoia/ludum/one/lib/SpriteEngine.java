@@ -1,5 +1,6 @@
-package paranoia.ludum.one.lib;
+package paranoia.ludum.two.lib;
 
+import paranoia.ludum.one.lib.*;
 import com.jme3.util.BufferUtils;
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package paranoia.ludum.one.lib;
+package paranoia.ludum.two.lib;
 
 import com.jme3.scene.Node;
 import java.util.ArrayList;

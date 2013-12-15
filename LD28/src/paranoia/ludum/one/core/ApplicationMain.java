@@ -1,21 +1,18 @@
-package paranoia.ludum.one.core;
+package paranoia.ludum.two.core;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.audio.AudioNode;
 import com.jme3.font.BitmapText;
 import com.jme3.input.KeyInput;
-import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector2f;
+import com.jme3.scene.Node;
 import com.jme3.system.AppSettings;
 import com.jme3.ui.Picture;
 import java.util.ArrayList;
-import paranoia.ludum.one.lib.Sprite;
-import paranoia.ludum.one.lib.SpriteEngine;
-import paranoia.ludum.one.lib.SpriteLibrary;
+import paranoia.ludum.two.lib.Sprite;
+import paranoia.ludum.two.lib.SpriteEngine;
+import paranoia.ludum.two.lib.SpriteLibrary;
 
 /**
  *
@@ -23,134 +20,172 @@ import paranoia.ludum.one.lib.SpriteLibrary;
  */
 public class ApplicationMain extends SimpleApplication {
     
-    //Arrays for pretty much everything in the game
-    public Sprite[] face = new Sprite[5];
-    public Description[] description = new Description[5];
-    public Vector2f[] positionS = new Vector2f[5];
-    public Vector2f[] positionE = new Vector2f[5];
-    
-    public Picture textBox;
-    
-    //The text for drawing the descriptions
-    BitmapText text;
-
-    //Audio nodes for stuff
-    AudioNode Main_Theme;
-    AudioNode Right, Wrong;
-    
-    private int guesses = 1;
-    public int page = 0;
     static ApplicationMain app;
+    static AppSettings settings;
     
-    /*public static void main(String[] args) {
+    //Sprites for NPC's and player
+    public Sprite player;
+    public Sprite[] npcs = new Sprite[10];
+    
+    public boolean renderTextBox = false;
+    
+    //Position of the player
+    public int x, y;
+    
+    //Pictures for extra things
+    public Picture textBox, background, lScreen;
+    public Picture[] imageSprites = new Picture[10];
+    
+    public BitmapText text, hudText;
+    
+    public Node terrainNode;
+    
+    public float loadTime = 3f;
+    float timer = 0;
+    
+    public static ApplicationMain getInstance() {
+        return app;
+    }
+    
+    public static void main(String[] args) {
         app = new ApplicationMain();
-        AppSettings settings = new AppSettings(false);
+        settings = new AppSettings(false);
+        settings.setResolution(1024, 768);
         app.setShowSettings(false);
         app.setDisplayFps(false);
         app.setDisplayStatView(false);
-        settings.setResolution(1024, 768);
         app.start();
-    }*/
+    }
     
     static SpriteEngine engine = new SpriteEngine();
     
     @Override
     public void simpleInitApp() {
-        text = new BitmapText(guiFont, false);
+        renderLoadScreen();
         flyCam.setEnabled(false);
-        positionS[0] = new Vector2f(0, 0);
-        positionE[0] = new Vector2f(254, 254);
-        positionS[1] = new Vector2f(0, settings.getHeight());
-        positionE[1] = new Vector2f(307, 270);
-        
-        textBox = new Picture("Text Box");
-        textBox.setImage(assetManager, "Textures/SHITTY text BOX.png", false);
-
-        Main_Theme = new AudioNode(assetManager, "Sounds/Main_Theme.ogg", false);
-        Right = new AudioNode(assetManager, "Sounds/Right.wav", false);
-        Wrong = new AudioNode(assetManager, "Sounds/Wrong.wav", false);
-        Main_Theme.setLooping(true);
-        Main_Theme.play();
-        
-        face[0] = new Sprite("Textures/face1.jpg", "Face1", assetManager, true, false, 1, 1, 0.0f, "End", "Start");
-        face[1] = new Sprite("Textures/face2.jpg", "Face2", assetManager, true, false, 1, 1, 0.0f, "End", "Start");
-        description[0] = new Description("He is a murderer", face[0]);
-        description[1] = new Description("She is not", face[1]);
-        
-        face[0].setOrder(1); face[1].setOrder(0);
-        
-        //Rendering the sprite here
+        player = new Sprite("Textures/Entities/Player.png", "Player", assetManager,
+                true, true, 1, 1, 0.0f, "End", "Start");
+        npcs[0] = new Sprite("Textures/Entities/Female.png", "Female", assetManager,
+                true, true, 1, 1, 0.0f, "End", "Start");
+        npcs[0].moveAbsolute(208, 208);
+        imageSprites[0] = new Picture();
+        imageSprites[0].setImage(assetManager, "Textures/Terrain/dirt.jpg", false);
+        World level = new World(this, settings);
+        level.generateLevel();
         SpriteLibrary.l_guiNode = guiNode;
         SpriteLibrary library = new SpriteLibrary("Library1", false);
-        //For keeping the sprites in an array for rendering
         ArrayList<Sprite> sprites = new ArrayList<Sprite>();
-        sprites.add(face[0]); sprites.add(face[1]);
+        sprites.add(player);
+        sprites.add(npcs[0]);
         for (int i = 0; i < sprites.size(); i++)
             library.addSprite(sprites.get(i));
         
         engine.addLibrary(library);
-        //Y-0 = bottom
-        face[0].moveAbsolute(0, 0);
-        face[1].moveAbsolute(0, 0);
         
+        background = new Picture("Background");
+        terrainNode = new Node("Terrain");
+        rootNode.attachChild(terrainNode);
+        System.out.println("Grass texture done overlay");
         initKeys();
     }
     
-    public void initKeys() {
-        inputManager.addMapping("Info", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-        inputManager.addMapping("guess", new KeyTrigger(KeyInput.KEY_0));
-        inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_LEFT));
-        inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_RIGHT));
-        inputManager.addListener(mouseListener, "Info", "guess");
-        inputManager.addListener(pageListener, "Left", "Right");
+    public void initBackground() {
+        for (int ty = 0; ty < settings.getHeight() - 100; ty++) {
+            for (int tx = 0; tx < settings.getWidth() - 100; tx++) {
+                background.setImage(assetManager, "Textures/grass.jpg", true);
+                background.setPosition(x, y);
+                terrainNode.attachChild(background);
+            }
+        }
     }
     
-    ActionListener pageListener = new ActionListener() {
+    public void writeText(String message) {
+        text = new BitmapText(guiFont, false);
+        text.setColor(ColorRGBA.White);
+        text.setSize(12f);
+        text.setText(message);
+    }
+    
+    public void initKeys() {
+        inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_RIGHT));
+        inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_LEFT));
+        inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_UP));
+        inputManager.addMapping("Down", new KeyTrigger(KeyInput.KEY_DOWN));
+        inputManager.addMapping("Talk", new KeyTrigger(KeyInput.KEY_I));
+        inputManager.addListener(player_listener, "Right", "Left", "Up", "Down", "Talk");
+    }
+    
+    ActionListener player_listener = new ActionListener() {
+        
         public void onAction(String name, boolean isPressed, float tpf) {
             if (name.equals("Right")) {
-                if (page < 5) {
-                page += 1;
-                } else {
-                    page = 0;
-                }
+                x += 8;
             }
-            
             else if (name.equals("Left")) {
-                if (page > 0) {
-                page -= 1;
-                } else {
-                    page = 4;
-                }
+                x -= 8;
+            }
+            else if (name.equals("Up")) {
+                y += 8;
+            }
+            else if (name.equals("Down")) {
+                y -= 8;
             }
         }
+        
     };
     
-    ActionListener mouseListener = new ActionListener() {
-        public void onAction(String name, boolean isPressed, float tpf) {
-            if (name.equals("Info")) {
-                Vector2f MPosition = inputManager.getCursorPosition();
-                System.out.println("Position taken");
-                face[page].moveAbsolute(settings.getWidth() / 2, settings.getHeight() / 2);
-            }
-            else if (name.equals("guess")) {
-                guesses = 0;
-            }
+    public void renderTextBox(String message) {
+        textBox = new Picture("TextBox");
+        hudText = new BitmapText(guiFont, false);
+        hudText.setSize(guiFont.getCharSet().getRenderedSize());      // font size
+        hudText.setColor(ColorRGBA.White);                             // font color
+        hudText.setText(message);                                       // the text
+        hudText.setLocalTranslation(300, hudText.getLineHeight(), 0); // position
+        hudText.setLocalTranslation(0, 100, 2);
+        
+        textBox.setImage(assetManager, "Textures/Menu/TextBox.png", false);
+        textBox.setWidth(settings.getWidth());
+        textBox.setHeight(100);
+        textBox.move(0, 0, 1);
+        
+        guiNode.attachChild(textBox);
+        guiNode.attachChild(hudText);
+    }
+    
+    public void renderLoadScreen() {
+            lScreen = new Picture("Loading Screen");
+            lScreen.setImage(assetManager, "Textures/Extras/Screens/loadingscreen.png", false);
+            lScreen.setWidth(768);
+            lScreen.setHeight(600);
+            lScreen.setLocalTranslation(-80, -80, 4);
+            guiNode.attachChild(lScreen);
+    }
+    
+    public void clearLoadingScreen() {
+        lScreen.setWidth(0);
+        lScreen.setHeight(0);
+        guiNode.detachChild(lScreen);
+    }
+    
+    public void clearTextBox() {
+        if (guiNode.hasChild(textBox)) {
+            guiNode.detachChild(textBox);
+            textBox.setTexture(assetManager, null, false);
         }
-    };
-    
-    public void writeDescription(Description desc){
-        String message = desc.desc;
-        text.setText(message);
-        text.setColor(ColorRGBA.White);
-        text.setLocalTranslation(0, settings.getHeight() / 4, 0);
-        text.setSize(12f);
-        guiNode.attachChild(text);
+        if (guiNode.hasChild(hudText)) {
+            guiNode.detachChild(hudText);
+            hudText.setText(" ");
+        }
     }
     
     @Override
     public void simpleUpdate(float tpf) {
-        if (guesses == 0) {
-            app.stop();
+        timer += tpf;
+        if (timer > loadTime) {
+            clearLoadingScreen();
         }
+        player.moveAbsolute(x, y);
+        this.guiViewPort.setClearColor(true);
+        this.guiViewPort.setBackgroundColor(ColorRGBA.White);
     }
 }
