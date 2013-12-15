@@ -1,0 +1,46 @@
+You only get one
+ - Level
+  -> The entire game and features works on one level and does not change
+  -> Features may change on the level as the game progress's
+
+ - puzzle
+  -> one puzzle in the game, needs to be completed to end the game...
+  -> maybe incorporate some RNG for puzzle mechanics or other things
+
+
+Seems like a winner
+--------------
+ - choice
+  -> only get one choice in the game will be randomly generated
+  -> choice will be conceived from evidence included by the game
+
+ -- No player but get a choice of faces
+ -- Each face will have a description associated with it
+ -- Click on the face to see the description
+ -- Find the one that is guilty, by using the descriptions provided
+ 
+ -- If you get it wrong, your one decision runs out and the game quits.
+ -- If you get it right, it adds another choice but takes one aswell (still equal to 1)
+--------------
+Goals:
+Boil the kettle
+Brush your teeth
+Kick a ball
+Kill Yourself
+Cut your hair
+Get a girlfriend
+Catch a Thief
+Steal a Diamond
+Kill someone else with a hammer
+Run 200m uninterrupted
+Kick a Dwarf
+Turn off the alarm
+--------------
+Controls:
+Punch - Q
+Kick - 2
+Interact - E
+Up - W/Up Arrow
+Down - S/DOwn Arrow
+Left - A/Left Arrow
+Right - D/Right Arrow
