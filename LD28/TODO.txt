@@ -1,7 +1,0 @@
-TODO List:
- - Fix the text box not dissapearing
- - Add some basic level generation (and collision [just check for blocks or something])
- - Add random task generation and add a timer (maybe use JMonkey timer)
- - Implement more of the textures when the task generation is being done
- - Maybe make new levels for the different tasks that are going to be done
- - Make some new classes and move code around for easability and compactness
