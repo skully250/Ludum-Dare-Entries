@@ -27,6 +27,7 @@ public class ApplicationMain extends SimpleApplication {
     //Sprites for NPC's and player
     public Sprite player;
     public Sprite[] npcs = new Sprite[10];
+    public Picture inventory;
     
     public boolean renderTextBox = false;
     public boolean loading = true;
@@ -72,24 +73,24 @@ public class ApplicationMain extends SimpleApplication {
     public void simpleInitApp() {
         renderLoadScreen();
         flyCam.setEnabled(false);
-        player = new Sprite("Textures/Entities/Player.png", "Player", assetManager,
-                true, true, 1, 1, 0.0f, "End", "Start");
-        npcs[0] = new Sprite("Textures/Entities/Female.png", "Female", assetManager,
-                true, true, 1, 1, 0.0f, "End", "Start");
+        player = new Sprite("Textures/Entities/Player.png", "Player", assetManager, false, true, 1, 1, 0.0f, "End", "Start");
+        npcs[0] = new Sprite("Textures/Entities/Female.png", "Female", assetManager, false, true, 1, 1, 0.0f, "End", "Start");
         npcs[0].moveAbsolute(npx, npy);
         imageSprites[0] = new Picture();
         imageSprites[0].setImage(assetManager, "Textures/Terrain/dirt.jpg", false);
         level = new World(this, settings);
         level.addItems();
         level.generateLevel();
-        level.renderItems();
         SpriteLibrary.l_guiNode = guiNode;
         SpriteLibrary library = new SpriteLibrary("Library1", false);
         ArrayList<Sprite> sprites = new ArrayList<Sprite>();
         sprites.add(player);
         sprites.add(npcs[0]);
-        for (int i = 0; i < sprites.size(); i++)
-            library.addSprite(sprites.get(i));
+        for (Sprite sprite : sprites)
+            library.addSprite(sprite);
+        
+        player.setOrder(4);
+        npcs[0].setOrder(4);
         
         engine.addLibrary(library);
         
@@ -100,9 +101,17 @@ public class ApplicationMain extends SimpleApplication {
         initKeys();
     }
     
+    public void grabItem(int x, int y) {
+        if (level.fSprites[y][x] != null) {
+            Picture item = level.fSprites[y][x];
+            guiNode.detachChild(level.fSprites[y][x]);
+            inventory = item;
+        }
+    }
+    
     public void initBackground() {
-        for (int ty = 0; ty < settings.getHeight() - 100; ty++) {
-            for (int tx = 0; tx < settings.getWidth() - 100; tx++) {
+        for (int ty = 0; ty < settings.getHeight() / GRID_SIZE; ty++) {
+            for (int tx = 0; tx < settings.getWidth() / GRID_SIZE; tx++) {
                 background.setImage(assetManager, "Textures/grass.jpg", true);
                 background.setPosition(x, y);
                 terrainNode.attachChild(background);
@@ -123,7 +132,9 @@ public class ApplicationMain extends SimpleApplication {
         inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_UP));
         inputManager.addMapping("Down", new KeyTrigger(KeyInput.KEY_DOWN));
         inputManager.addMapping("Talk", new KeyTrigger(KeyInput.KEY_I));
-        inputManager.addListener(player_listener, "Right", "Left", "Up", "Down", "Talk");
+        inputManager.addMapping("Grab", new KeyTrigger(KeyInput.KEY_G));
+        inputManager.addMapping("Drop", new KeyTrigger(KeyInput.KEY_D));
+        inputManager.addListener(player_listener, "Right", "Left", "Up", "Down", "Grab", "Drop");
     }
     
     ActionListener player_listener = new ActionListener() {
@@ -144,6 +155,12 @@ public class ApplicationMain extends SimpleApplication {
             else if (name.equals("Down")) {
                 if (level.canMove(x, y - 8))
                 y -= 8;
+            }
+            else if (name.equals("Grab")) {
+                if (isPressed) {
+                    grabItem(x/GRID_SIZE, y/GRID_SIZE);
+                    System.out.println(x/GRID_SIZE + " " + y/GRID_SIZE);
+                }
             }
         }
         
@@ -172,7 +189,7 @@ public class ApplicationMain extends SimpleApplication {
         lScreen.setImage(assetManager, "Textures/Menu/loadingscreen.png", false);
         lScreen.setWidth(768);
         lScreen.setHeight(600);
-        lScreen.setLocalTranslation(-80, -80, 4);
+        lScreen.setLocalTranslation(-80, -80, 5);
         guiNode.attachChild(lScreen);
     }
     
