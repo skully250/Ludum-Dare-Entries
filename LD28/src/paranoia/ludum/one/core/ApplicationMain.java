@@ -1,6 +1,8 @@
 package paranoia.ludum.two.core;
 
+import paranoia.ludum.two.world.World;
 import com.jme3.app.SimpleApplication;
+import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
@@ -36,6 +38,8 @@ public class ApplicationMain extends SimpleApplication {
     public int x, y;
     public int npx = 208, npy = 208;
     
+    public int foodCollected = 0;
+    
     public static final int GRID_SIZE = 16;
     
     Random rand = new Random();
@@ -46,7 +50,7 @@ public class ApplicationMain extends SimpleApplication {
     
     public World level;
     
-    public BitmapText text, hudText;
+    public BitmapText text, hudText, inv;
     
     public Node terrainNode;
     
@@ -80,6 +84,7 @@ public class ApplicationMain extends SimpleApplication {
         imageSprites[0].setImage(assetManager, "Textures/Terrain/dirt.jpg", false);
         level = new World(this, settings);
         level.addItems();
+        level.addBlocks();
         level.generateLevel();
         SpriteLibrary.l_guiNode = guiNode;
         SpriteLibrary library = new SpriteLibrary("Library1", false);
@@ -97,6 +102,7 @@ public class ApplicationMain extends SimpleApplication {
         background = new Picture("Background");
         terrainNode = new Node("Terrain");
         rootNode.attachChild(terrainNode);
+        renderInventory();
         System.out.println("Grass texture done overlay");
         initKeys();
     }
@@ -106,6 +112,7 @@ public class ApplicationMain extends SimpleApplication {
             Picture item = level.fSprites[y][x];
             guiNode.detachChild(level.fSprites[y][x]);
             inventory = item;
+            System.out.println(item + " Picked up");
         }
     }
     
@@ -142,19 +149,19 @@ public class ApplicationMain extends SimpleApplication {
         public void onAction(String name, boolean isPressed, float tpf) {
             if (name.equals("Right")) {
                 if (level.canMove(x + 8, y))
-                x += 8;
+                    x += 8;
             }
             else if (name.equals("Left")) {
                 if (level.canMove(x - 8, y))
-                x -= 8;
+                    x -= 8;
             }
             else if (name.equals("Up")) {
                 if (level.canMove(x, y + 8))
-                y += 8;
+                    y += 8;
             }
             else if (name.equals("Down")) {
                 if (level.canMove(x, y - 8))
-                y -= 8;
+                    y -= 8;
             }
             else if (name.equals("Grab")) {
                 if (isPressed) {
@@ -199,6 +206,16 @@ public class ApplicationMain extends SimpleApplication {
         guiNode.detachChild(lScreen);
     }
     
+    public void renderInventory() {
+        inv = new BitmapText(guiFont, false);
+        inv.setLocalTranslation(0, 0, 3);
+        if (inventory != null)
+            inv.setText("Inventory: " + inventory);
+        else
+            inv.setText("Inventory: None");
+        guiNode.attachChild(inv);
+    }
+    
     public void clearTextBox() {
         if (guiNode.hasChild(textBox)) {
             guiNode.detachChild(textBox);
@@ -223,22 +240,22 @@ public class ApplicationMain extends SimpleApplication {
                 switch(nnpx) {
                     case 1 :
                         if (level.canMove(npx + 16, npy))
-                        npx += 16;
+                            npx += 16;
                         break;
                     case 2 :
                         if (level.canMove(npx - 16, npy))
-                        npx -= 16;
+                            npx -= 16;
                         break;
                 }
                 int nnpy = rand.nextInt(2);
                 switch(nnpy) {
                     case 1 :
                         if (level.canMove(npx, npy + 16))
-                        npy += 16;
+                            npy += 16;
                         break;
                     case 2 :
                         if (level.canMove(npx, npy - 16))
-                        npy -= 16;
+                            npy -= 16;
                         break;
                 }
                 timer = 0;
@@ -253,8 +270,19 @@ public class ApplicationMain extends SimpleApplication {
             } else if (y > settings.getHeight()) {
                 y = 0;
             }
+            
+            if(x == 0 && y == 0 || y == 1) {
+                if (inventory != null) {
+                    foodCollected += 1;
+                    inventory = null;
+                    System.out.println("Food Stored, Food Amount: " + foodCollected);
+                }
+            }
+            
+            
             player.moveAbsolute(x, y);
             npcs[0].moveAbsolute(npx, npy);
+            inv.setText("Inventory: " + inventory);
             this.guiViewPort.setClearColor(true);
             this.guiViewPort.setBackgroundColor(ColorRGBA.White);
         }

@@ -1,8 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package paranoia.ludum.two.core;
+package paranoia.ludum.two.world.tile;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetManager;
@@ -19,7 +15,7 @@ public class Wall {
     public AssetManager assetManager;
     public Node guiNode;
     public Picture sprite;
-
+    
     public String imageLocation;
     
     public Wall(int x, int y, String imageLocation, SimpleApplication app) {

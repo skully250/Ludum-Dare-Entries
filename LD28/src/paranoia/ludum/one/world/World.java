@@ -1,4 +1,4 @@
-package paranoia.ludum.two.core;
+package paranoia.ludum.two.world;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetManager;
@@ -6,6 +6,8 @@ import com.jme3.scene.Node;
 import com.jme3.system.AppSettings;
 import com.jme3.ui.Picture;
 import java.util.Random;
+import paranoia.ludum.two.core.ApplicationMain;
+import paranoia.ludum.two.world.tile.Wall;
 
 /**
  *
@@ -21,9 +23,15 @@ public class World {
     Wall wall;
     Wall block;
     
+    //For most of the ground sprites in the scene
     public Picture[][] lSprites;
     public Picture[][] fSprites;
+    
+    //For grabbable items in the scene
     public Picture[] itemList;
+    
+    //For other items in the scene
+    public Picture[] blockList;
     
     public World(SimpleApplication app, AppSettings settings) {
         this.app = app;
@@ -34,11 +42,13 @@ public class World {
         int gridY = settings.getHeight() / ApplicationMain.GRID_SIZE;
         int gridX = settings.getWidth() / ApplicationMain.GRID_SIZE;
         itemList = new Picture[10];
+        blockList = new Picture[10];
         lSprites = new Picture[gridY][gridX];
         fSprites = new Picture[gridY][gridX];
     }
     
     public void addItems() {
+        //Where i add the items over the terrain
         Picture burger = new Picture("Burger");
         Picture tuna = new Picture("Tuna");
         Picture donut = new Picture("Donut");
@@ -53,6 +63,15 @@ public class World {
         itemList[3] = fries;
     }
     
+    public void addBlocks() {
+        //Where i will add all the blocks that go over the terrain
+        Picture fridge = new Picture("Fridge");
+        fridge.setImage(assetManager, "Textures/Extras/Kitchen/fridge.png", false);
+        fridge.setHeight(32);
+        fridge.setWidth(16);
+        blockList[0] = fridge;
+    }
+    
     public void renderEntities() {
         
     }
@@ -60,19 +79,30 @@ public class World {
     public void renderItems() {
         Random rand = new Random();
         for (int i = 0; i < 50; i++) {
-            int rando = rand.nextInt(3);
-            System.out.println(rando + " is the random number");
-            if (rando == 3 || rando == 2) {
+            int rando = rand.nextInt(2);
+            if (rando == 1) {
                 int ix = rand.nextInt(46);
                 int iy = rand.nextInt(46);
-                System.out.println(ix + " " + iy);
                 int index = rand.nextInt(4);
                 itemList[index].setLocalTranslation(ix * 16, iy * 16, 3);
                 itemList[index].setWidth(16); itemList[index].setHeight(16);
                 fSprites[iy][ix] = itemList[index];
                 guiNode.attachChild(itemList[index]);
-                System.out.println(itemList[index] + " added");
+                System.out.println(itemList[index] + " was added at " + ix + " " + iy);
             }
+        }
+        renderBlocks();
+    }
+    
+    public void renderBlocks() {
+        System.out.println("Scanning BlockList");
+        for (int i = 0; i < 1; i++) {
+            Picture block = blockList[i];
+            System.out.println(block + " grabbed from array");
+            if (block != null)
+                guiNode.attachChild(block);
+            block.setLocalTranslation(0, 0, 3);
+            System.out.println(block + " Added to the game");
         }
     }
     
